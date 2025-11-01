@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<title>نفذ الشروط</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+/* 🔴 الحل النهائي لإخفاء شريط التمرير الأفقي بالكامل */
+html, body {
+  /* لضمان عدم ظهور أي تمرير أفقي */
+  overflow-x: hidden; 
+}
+
+* { box-sizing: border-box; margin:0; padding:0; }
+body {
+  font-family: 'Tahoma', sans-serif;
+  background: linear-gradient(270deg, #05000a, #120022, #1a0033, #05000a);
+  background-size: 800% 800%;
+  animation: gradientBG 20s ease infinite;
+  color: white;
+  display: flex;
+  flex-direction: column; 
+  justify-content: flex-start; 
+  align-items: center; 
+  min-height: 100vh;
+  /* تم نقل overflow-x إلى body و html معًا للضمان */
+  padding: 30px 0;
+}
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.page-container {
+  width: 100%;
+  max-width: 600px;
+  background: rgba(10, 0, 20, 0.8);
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 0 35px #a855f7, 0 0 60px #7e22ce inset;
+  animation: glow 3s ease-in-out infinite alternate;
+  position: relative;
+}
+@keyframes glow {
+  0% { box-shadow: 0 0 25px #7e22ce, 0 0 50px #9333ea inset; }
+  50% { box-shadow: 0 0 45px #a855f7, 0 0 80px #7e22ce inset; }
+  100% { box-shadow: 0 0 25px #7e22ce, 0 0 50px #9333ea inset; }
+}
+
+/* subtle moving sparkle overlay for depth */
+.page-container::after{
+  content: "";
+  position: absolute;
+  /* 🔴 تم تقليل القيم بشكل أكبر لتقليل امتداد العنصر الزائف خارج الشاشة */
+  inset: -10px -15px -15px -10px; 
+  background: radial-gradient(circle at 15% 20%, rgba(168,85,247,0.06), transparent 8%),
+              radial-gradient(circle at 80% 80%, rgba(147,51,234,0.05), transparent 10%);
+  pointer-events: none;
+  animation: containerDrift 18s linear infinite;
+  opacity: 1;
+}
+@keyframes containerDrift {
+  0% { transform: translate(0,0) rotate(0deg); }
+  50% { transform: translate(6px,-6px) rotate(2deg); }
+  100% { transform: translate(0,0) rotate(0deg); }
+}
+
+.top-image-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9; 
+  border-radius: 15px;
+  margin-bottom: 20px;
+  overflow: hidden; 
+  box-shadow: 0 0 25px #7e22ce, 0 0 35px #9333ea inset;
+  animation: pulse 2s infinite alternate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000; 
+}
+
+.top-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; 
+  transition: transform 0.5s ease;
+}
+
+
+h2 {
+  font-size: 22px;
+  margin-bottom: 15px;
+  color: #c084fc;
+  text-shadow: 0 0 10px #a855f7, 0 0 20px #9333ea;
+  text-align: center;
+  animation: flicker 2s infinite;
+}
+@keyframes flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity:1; }
+  20%, 22%, 24%, 55% { opacity:0.3; }
+}
+
+.progress-container {
+  width: 100%;
+  height: 22px;
+  background-color: #111;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 15px #a855f7, 0 0 25px #9333ea inset;
+  margin-bottom: 25px;
+}
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #9333ea, #a855f7, #7e22ce);
+  transition: width 0.5s ease;
+  border-radius: 12px;
+  animation: progressGlow 2s infinite alternate;
+}
+@keyframes progressGlow {
+  0% { box-shadow: 0 0 10px #a855f7, 0 0 15px #9333ea inset; }
+  100% { box-shadow: 0 0 20px #7e22ce, 0 0 30px #a855f7 inset; }
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(20, 10, 40, 0.8);
+  border: 2px solid #4b0082;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin: 12px auto;
+  width: 100%;
+  box-shadow: 0 0 12px #a855f7, 0 0 15px #7e22ce inset;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition: 0.5s ease, box-shadow 1s, transform 0.2s ease;
+  font-size: 17px;
+}
+
+.step.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.step.completed { border-color: #4ade80; background-color: #10041add; box-shadow: 0 0 20px #4ade80; }
+
+.step span { text-align: right; font-size: inherit; }
+.check { font-size: 22px; animation: blink 1.5s infinite; transition: transform 0.2s ease; }
+
+.step a:active span#check1,
+.step a:active span#check2,
+.step a:active span#check3,
+.step a:active span#check4 {
+  transform: translateX(5px);
+}
+
+@keyframes blink {
+  0%, 50%, 100% { opacity:1; }
+  25%, 75% { opacity:0.3; }
+}
+
+a { color: white; text-decoration: none; display: flex; align-items: center; width: 100%; justify-content: space-between; }
+.loading {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 3px solid #fff;
+  border-top: 3px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+.final-section { margin-top: 25px; }
+.final-message {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #a855f7;
+  text-shadow: 0 0 8px #a855f7;
+  text-align: center;
+  animation: flicker 2s infinite;
+}
+
+.final-buttons {
+  background: rgba(15, 5, 25, 0.8);
+  border-radius: 14px;
+  border: 2px solid #4b0082;
+  padding: 12px 10px;
+  width: 100%;
+  box-shadow: 0 0 18px #9333ea, 0 0 25px #7e22ce inset;
+}
+.final-buttons a {
+  display: block;
+  background-color: #444;
+  color: white;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: bold;
+  margin: 8px auto;
+  pointer-events: none;
+  opacity: 0.5;
+  transition: 0.3s, box-shadow 1s, transform 0.2s ease;
+  box-shadow: 0 0 8px #000;
+  text-align: center;
+}
+.final-buttons a.active {
+  background-color: #6d28d9;
+  pointer-events: auto;
+  opacity: 1;
+  box-shadow: 0 0 15px #a855f7;
+  animation: glowBtn 2s infinite alternate;
+}
+.final-buttons a.btn-guide { background-color: #2563eb !important; }
+.final-buttons a:hover { transform: scale(1.03); }
+
+@keyframes glowBtn {
+  0% { box-shadow: 0 0 10px #a855f7; }
+  50% { box-shadow: 0 0 20px #c084fc; }
+  100% { box-shadow: 0 0 10px #a855f7; }
+}
+
+#copyPopup {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(120, 40, 200, 0.9);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: bold;
+  box-shadow: 0 0 15px #c084fc;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s;
+  z-index: 9999;
+}
+
+@media (max-width: 480px) {
+  .top-image-container { max-height: 40vh; }
+  .top-image-container img { object-fit: contain; }
+}
+</style>
+</head>
+<body>
+  <div class="page-container">
+    <div class="top-image-container">
+      <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiaFOCPwekItyPDh2C5R_75D0TUln-wguAjQFO6ibtCSN9wZshDPs6egkYZmLphgE7ZjvOmZc6SR-YYTxJJ28Xaf2EsxVbuSJKlFh4hpzofzzW4H_aBkketkSjxgg2O2XAIv9zAp04sTHx5TFLyQ1woOlBntUkpUoTfzDmd5kwSdRU0uzvTdrNFIRAPVTU/s1600/1.jpg" alt="Free Fire Script" id="mainImage" />
+    </div>
+
+    <h2>نفذ هذه الخطوات أولاً لكي يتم فتح لك روابط التحميل</h2>
+
+    <div class="progress-container">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div id="step1" class="step active">
+      <a href="#" onclick="completeStep(1, 'https://www.youtube.com/@MRGAMESFF-k3q'); return false;">
+        <span>📺🔔 اضغط هنا وقم بالاشتراك في القناة 1 وتفعيل زر الجرس</span>
+        <span id="check1">➡️</span>
+      </a>
+    </div>
+
+    <div id="step2" class="step">
+      <a href="#" onclick="completeStep(2, 'https://www.youtube.com/@DarkPanda-DP'); return false;">
+        <span>📺🔔 اضغط هنا وقم بالاشتراك في القناة 2 وتفعيل زر الجرس</span>
+        <span id="check2">➡️</span>
+      </a>
+    </div>
+
+    <div id="step3" class="step">
+      <a href="#" onclick="completeStep(3); return false;">
+        <span>👍💬 اضغط هنا وقم بعمل لايك وتعليق مميز للفيديو الذي ستراه</span>
+        <span id="check3">➡️</span>
+      </a>
+    </div>
+
+    <div id="step4" class="step">
+      <a href="#" onclick="completeStep(4, 'https://www.youtube.com/@DarkPandaff-1'); return false;">
+        <span>📺🔔 اضغط هنا وقم بالاشتراك في القناة 3 وتفعيل زر الجرس</span>
+        <span id="check4">➡️</span>
+      </a>
+    </div>
+
+    <div class="final-section">
+      <div id="finalMessage" class="final-message">❌ نفّذ الخطوات أولاً لكي يتم فتح روابط التحميل</div>
+      <div class="final-buttons">
+        <a id="btnDownload" href="https://shorturl.at/LMnI7" onclick="goToDownload(); return false;">🔒 لتحميل اقوي سكربت فري فاير هيدشوت تلقائي اخر تحديث اضغط هنا</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="copyPopup">تم نسخ الرابط!</div>
+
+  <script>
+    // منع قائمة السياق على الصورة
+    document.getElementById("mainImage").addEventListener("contextmenu", function(e){ e.preventDefault(); });
+
+    const STEP_EXPIRY_MS = 365 * 24 * 60 * 60 * 1000;
+    const step3Links = ["https://youtu.be/aCsJ332IsoQ"];
+    const step3StorageKey = "step3States_v8273626424674828323_page623523238253253545";
+    const step4StorageKey = "step4States_v54566665_page55599955";
+    const stepsStateKey = "stepsState";
+
+    function isStateExpired(savedState) { if(!savedState.timestamp) return true; return Date.now() - savedState.timestamp > STEP_EXPIRY_MS; }
+
+    window.onload = () => {
+      const savedState = JSON.parse(localStorage.getItem(stepsStateKey) || "{}");
+      const step3State = JSON.parse(localStorage.getItem(step3StorageKey) || "{}");
+      const step4State = JSON.parse(localStorage.getItem(step4StorageKey) || "{}");
+
+      if(isStateExpired(savedState)){
+        localStorage.removeItem(stepsStateKey);
+        localStorage.removeItem(step3StorageKey);
+        localStorage.removeItem(step4StorageKey);
+      }
+
+      for(let i=1;i<=2;i++){
+        if(savedState["step"+i]){
+          document.getElementById("step"+i).classList.add("completed");
+          document.getElementById("check"+i).innerText="✅";
+          const nextStep=document.getElementById("step"+(i+1));
+          if(nextStep) nextStep.classList.add("active");
+        }
+      }
+
+      if(savedState.step2) document.getElementById("step3").classList.add("active");
+      if(step3State.completed){
+        document.getElementById("step3").classList.add("completed");
+        document.getElementById("check3").innerText="✅";
+        document.getElementById("step4").classList.add("active");
+      }
+      if(step4State.completed){
+        document.getElementById("step4").classList.add("completed");
+        document.getElementById("check4").innerText="✅";
+      }
+
+      unlockButtons();
+      updateProgressBar();
+
+      let firstIncomplete=null;
+      for(let i=1;i<=4;i++){
+        if(!document.getElementById("step"+i).classList.contains("completed")){
+          firstIncomplete=document.getElementById("step"+i);
+          break;
+        }
+      }
+      if(firstIncomplete){ setTimeout(()=>{ firstIncomplete.scrollIntoView({behavior:"smooth", block:"center"}); },600); }
+    };
+
+    function saveStepState(step){
+      const current=JSON.parse(localStorage.getItem(stepsStateKey) || "{}");
+      current["step"+step]=true;
+      current.timestamp=Date.now();
+      localStorage.setItem(stepsStateKey, JSON.stringify(current));
+    }
+
+    function completeStep(step, url = null) {
+      const check = document.getElementById("check" + step);
+      const stepElement = document.getElementById("step" + step);
+      const alreadyCompleted = stepElement.classList.contains("completed");
+
+      if (step === 3) {
+        const selected = step3Links[Math.floor(Math.random() * step3Links.length)];
+        window.open(selected, "_blank");
+      } else if (url) {
+        window.open(url, "_blank");
+      }
+
+      if (alreadyCompleted) return;
+
+      // عرض الـ spinner
+      check.innerHTML = '<span class="loading"></span>';
+
+      // بعد 10 ثواني اكتمال الخطوة
+      setTimeout(() => {
+        stepElement.classList.add("completed");
+        check.innerText = "✅";
+
+        let nextStep = null;
+
+        if (step === 3) {
+          localStorage.setItem(step3StorageKey, JSON.stringify({ completed: true, timestamp: Date.now() }));
+          nextStep = document.getElementById("step4");
+          if (nextStep) nextStep.classList.add("active");
+        } else if (step === 4) {
+          localStorage.setItem(step4StorageKey, JSON.stringify({ completed: true, timestamp: Date.now() }));
+        } else {
+          saveStepState(step);
+          nextStep = document.getElementById("step" + (step + 1));
+          if (nextStep) nextStep.classList.add("active");
+        }
+
+        unlockButtons();
+        updateProgressBar();
+
+        if (nextStep) {
+          setTimeout(() => {
+            nextStep.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 500);
+        }
+      }, 10000); // 10 ثواني
+    }
+
+
+    function unlockButtons(){
+      const allCompleted=[1,2].every(i=>document.getElementById("step"+i).classList.contains("completed")) &&
+        document.getElementById("step3").classList.contains("completed") &&
+        document.getElementById("step4").classList.contains("completed");
+      if(allCompleted){
+        document.getElementById("finalMessage").innerText="✅ تم تنفيذ كل الخطوات بنجاح";
+        document.getElementById("finalMessage").style.color="lime";
+        document.getElementById("btnDownload").classList.add("active");
+        setTimeout(()=>{ document.getElementById("btnDownload").scrollIntoView({behavior:"smooth", block:"center"}); },800);
+        if(!document.getElementById("btnGuide")){
+          const guideBtn=document.createElement("a");
+          guideBtn.id="btnGuide";
+          guideBtn.href="https://youtu.be/Og2J47BoJBg";
+          guideBtn.target="_blank";
+          guideBtn.className="btn-guide active";
+          guideBtn.innerText="❓ إذا واجهت أي مشكلة في التحميل اضغط هنا";
+          document.querySelector(".final-buttons").appendChild(guideBtn);
+          guideBtn.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+        }
+      }
+    }
+
+    function updateProgressBar(){
+      let done=0;
+      if(document.getElementById("step1").classList.contains("completed")) done++;
+      if(document.getElementById("step2").classList.contains("completed")) done++;
+      if(document.getElementById("step3").classList.contains("completed")) done++;
+      if(document.getElementById("step4").classList.contains("completed")) done++;
+      document.getElementById("progressBar").style.width=(done/4)*100+"%";
+    }
+
+    for(let i=1;i<=4;i++){ document.getElementById("step"+i).addEventListener("contextmenu", function(e){ e.preventDefault(); }); }
+    function goToDownload(){ window.open("https://shorturl.at/LMnI7","_blank"); }
+
+    const downloadBtn=document.getElementById("btnDownload");
+    const copyPopup=document.getElementById("copyPopup");
+    let pressTimer;
+    function copyLink(){
+      const link=downloadBtn.getAttribute("href");
+      navigator.clipboard.writeText(link).then(()=>{
+        copyPopup.innerText="✅ تم نسخ الرابط: "+link;
+        copyPopup.style.opacity=1;
+        setTimeout(()=>{ copyPopup.style.opacity=0; },2000);
+      }).catch(()=>{
+        copyPopup.innerText="❌ فشل نسخ الرابط، حاول مرة أخرى";
+        copyPopup.style.opacity=1;
+        setTimeout(()=>{ copyPopup.style.opacity=0; },2000);
+      });
+    }
+
+    downloadBtn.addEventListener("contextmenu", function(e){ e.preventDefault(); copyLink(); });
+    downloadBtn.addEventListener("touchstart", function(e){ downloadBtn.style.backgroundColor="#444"; pressTimer=setTimeout(copyLink,1000); });
+    downloadBtn.addEventListener("touchend", function(e){ clearTimeout(pressTimer); downloadBtn.style.backgroundColor=""; });
+    downloadBtn.addEventListener("touchmove", function(e){ clearTimeout(pressTimer); downloadBtn.style.backgroundColor=""; });
+
+    // additional mouse-based copy behavior (desktop)
+    downloadBtn.addEventListener("mousedown", ()=> { pressTimer = setTimeout(copyLink, 1500); });
+    downloadBtn.addEventListener("mouseup", ()=> { clearTimeout(pressTimer); });
+    downloadBtn.addEventListener("mouseleave", ()=> { clearTimeout(pressTimer); });
+
+  </script>
+</body>
+</html>
